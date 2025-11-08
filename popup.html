@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verdant - Focus Forest</title>
+  <link rel="stylesheet" href="styles/popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🌲 Verdant Focus Forest</h1>
+      <p class="subtitle">Grow your forest through focus</p>
+    </header>
+
+    <div class="forest-container">
+      <canvas id="forestCanvas" width="400" height="300"></canvas>
+      <div id="wildfire-warning" class="hidden">🔥 Wildfire spreading!</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <span class="label">Session Time:</span>
+        <span id="sessionTime">00:00:00</span>
+      </div>
+      <div class="stat">
+        <span class="label">Focus Score:</span>
+        <span id="focusScore">100%</span>
+      </div>
+      <div class="stat">
+        <span class="label">Trees Grown:</span>
+        <span id="treeCount">0</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="startBtn" class="btn btn-start">Start Session</button>
+      <button id="endBtn" class="btn btn-end hidden">End Session</button>
+      <button id="settingsBtn" class="btn btn-secondary">⚙️ Settings</button>
+    </div>
+
+    <div class="distractions">
+      <h3>Blocked Sites</h3>
+      <div id="blockedList"></div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 450px;
+  min-height: 600px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+.container {
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+h1 {
+  font-size: 24px;
+  margin-bottom: 5px;
+}
+
+.subtitle {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.forest-container {
+  position: relative;
+  background: linear-gradient(to bottom, #87CEEB 0%, #90EE90 100%);
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#forestCanvas {
+  width: 100%;
+  height: auto;
+  border-radius: 5px;
+  display: block;
+}
+
+#wildfire-warning {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 69, 0, 0.9);
+  padding: 8px 12px;
+  border-radius: 5px;
+  font-weight: bold;
+  animation: pulse 1s infinite;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.stat {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.stat .label {
+  display: block;
+  font-size: 11px;
+  opacity: 0.9;
+  margin-bottom: 5px;
+}
+
+.stat span:last-child {
+  display: block;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-start {
+  background: #22c55e;
+  color: white;
+}
+
+.btn-start:hover {
+  background: #16a34a;
+  transform: translateY(-2px);
+}
+
+.btn-end {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-end:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  flex: 0.5;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.distractions {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.distractions h3 {
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+#blockedList {
+  font-size: 12px;
+  opacity: 0.9;
+}
