@@ -29,6 +29,22 @@ chrome.runtime.onStartup.addListener(async () => {
   }
 })();
 
+// ALWAYS run analysis every 20 seconds, regardless of session state
+console.log('🚀 Starting automatic focus analysis (every 20 seconds)');
+setInterval(async () => {
+  try {
+    const session = await SessionStorage.getSessionState();
+    if (session.active && !session.paused) {
+      console.log('⏰ Auto-analysis running...');
+      await BackgroundFocusTracker.performFocusTick();
+    } else {
+      console.log('⏸️ Session not active, skipping analysis');
+    }
+  } catch (error) {
+    console.error('Auto-analysis error:', error);
+  }
+}, 20000);
+
 // Listen for messages from popup/content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   (async () => {

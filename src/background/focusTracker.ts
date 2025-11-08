@@ -14,13 +14,20 @@ export class BackgroundFocusTracker {
   private static readonly WILDFIRE_TRIGGER_DURATION = 60000; // 60 seconds
 
   static startMonitoring(): void {
+    console.log('🎯 Focus monitoring started - analysis every 10 seconds');
+    
+    // Run first analysis immediately
+    this.performFocusTick().catch(err => console.error('Initial focus tick error:', err));
+    
     // Focus tick every 10 seconds for responsive feedback
     this.focusTickInterval = window.setInterval(async () => {
+      console.log('⏰ Running scheduled focus analysis...');
       await this.performFocusTick();
     }, 10000);
   }
 
   static stopMonitoring(): void {
+    console.log('🛑 Focus monitoring stopped');
     if (this.focusTickInterval !== null) {
       clearInterval(this.focusTickInterval);
       this.focusTickInterval = null;
@@ -31,17 +38,22 @@ export class BackgroundFocusTracker {
   static async performFocusTick(): Promise<void> {
     const session = await SessionStorage.getSessionState();
     if (!session.active || session.paused) {
+      console.log('⏸️ Focus tick skipped - session not active or paused');
       return;
     }
 
+    console.log('✅ Performing focus tick analysis...');
+    
     // Get current focus metrics
     const metrics = await FocusMonitor.getFocusMetrics();
     
     // Use LLM to analyze focus (falls back to heuristics if no API key)
+    const timeOnSite = Date.now() - (metrics.currentSiteArrivalTime || Date.now());
+    
     const analysisData: FocusAnalysisRequest = {
       currentUrl: metrics.activeUrl || '',
       tabSwitchCount: metrics.tabSwitchCount || 0,
-      timeOnCurrentSite: Date.now() - (metrics.lastActivityTimestamp || Date.now()),
+      timeOnCurrentSite: timeOnSite,
       recentUrls: [], // Could track this in future
       userActivity: {
         mouseMovements: 0,
@@ -51,6 +63,8 @@ export class BackgroundFocusTracker {
       sessionDuration: session.startTime ? Date.now() - session.startTime : 0,
       distractionSiteVisits: Math.floor((metrics.timeOnDistractingSites || 0) / 60000)
     };
+    
+    console.log(`📊 Time on ${metrics.activeUrl}: ${Math.floor(timeOnSite / 1000)}s`);
 
     const analysis = await LLMFocusAnalyzer.analyzeFocus(analysisData);
     const focusScore = analysis.focusScore;
@@ -139,8 +153,23 @@ export class BackgroundFocusTracker {
   }
 
   static async handleTabChange(tabId: number, url: string): Promise<void> {
-    // Increment tab switch counter
-    await FocusMonitor.incrementTabSwitch();
+    const metrics = await FocusMonitor.getFocusMetrics();
+    const previousUrl = metrics.activeUrl;
+    
+    // Only increment tab switch counter if switching to a different domain
+    // This prevents counting refreshes or same-site navigation
+    if (previousUrl) {
+      try {
+        const prevDomain = new URL(previousUrl).hostname;
+        const newDomain = new URL(url).hostname;
+        if (prevDomain !== newDomain) {
+          await FocusMonitor.incrementTabSwitch();
+        }
+      } catch {
+        // If URL parsing fails, count it as a switch
+        await FocusMonitor.incrementTabSwitch();
+      }
+    }
     
     await FocusMonitor.updateTabInfo(tabId, url);
     

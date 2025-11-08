@@ -57,6 +57,7 @@ export interface FocusMetrics {
   windowFocused: boolean;
   tabVisible: boolean;
   lastActivityTimestamp: number;
+  currentSiteArrivalTime: number; // When user arrived at current URL
   tabSwitchCount: number;
   distractionScore: number; // 0-1, lower = more distracted
   timeOnDistractingSites: number; // in seconds

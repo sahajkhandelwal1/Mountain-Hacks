@@ -146,16 +146,18 @@ Calculate a nuanced score that reflects BOTH the site type AND the user's behavi
     }
     
     // Calculate tab switching score (20% weight)
-    let switchScore = 80; // Start high
-    if (data.tabSwitchCount > 20) {
-      switchScore = 20; // Very distracted
-    } else if (data.tabSwitchCount > 15) {
-      switchScore = 35;
-    } else if (data.tabSwitchCount > 10) {
+    // Be more lenient - only penalize excessive switching
+    let switchScore = 90; // Start very high
+    if (data.tabSwitchCount > 30) {
+      switchScore = 30; // Extremely distracted
+    } else if (data.tabSwitchCount > 20) {
       switchScore = 50;
-    } else if (data.tabSwitchCount > 5) {
+    } else if (data.tabSwitchCount > 15) {
       switchScore = 65;
+    } else if (data.tabSwitchCount > 10) {
+      switchScore = 75;
     }
+    // 0-10 switches = 90 (normal productive work)
     
     // Calculate session quality score (15% weight)
     let sessionScore = 70;
@@ -187,9 +189,11 @@ Calculate a nuanced score that reflects BOTH the site type AND the user's behavi
       suggestions.push('Excellent deep focus! You\'re in the zone.');
     }
     
-    if (data.tabSwitchCount > 10) {
-      suggestions.push(`${data.tabSwitchCount} tab switches detected. Try using one tab at a time.`);
-    } else if (data.tabSwitchCount < 3) {
+    if (data.tabSwitchCount > 20) {
+      suggestions.push(`${data.tabSwitchCount} tab switches is quite high. Try to focus on fewer tasks.`);
+    } else if (data.tabSwitchCount > 15) {
+      suggestions.push('Moderate tab switching detected. Consider focusing on one task at a time.');
+    } else if (data.tabSwitchCount < 5) {
       suggestions.push('Great focus stability with minimal tab switching!');
     }
     

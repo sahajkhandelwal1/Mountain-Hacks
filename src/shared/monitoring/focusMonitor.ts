@@ -64,13 +64,34 @@ export class FocusMonitor {
 
   static async updateTabInfo(tabId: number, url: string): Promise<void> {
     const metrics = await this.getFocusMetrics();
+    const urlChanged = metrics.activeUrl !== url;
+    
+    // Extract domains for comparison
+    const getCurrentDomain = (urlStr: string | null): string | null => {
+      if (!urlStr) return null;
+      try {
+        return new URL(urlStr).hostname.replace('www.', '');
+      } catch {
+        return null;
+      }
+    };
+    
+    const previousDomain = getCurrentDomain(metrics.activeUrl);
+    const newDomain = getCurrentDomain(url);
+    const domainChanged = previousDomain !== newDomain;
     
     if (metrics.activeTabId !== tabId) {
       metrics.activeTabId = tabId;
       metrics.activeUrl = url;
-      // Reset tab switch count on new tab (we'll track switches separately)
-    } else {
+      if (domainChanged) {
+        metrics.currentSiteArrivalTime = Date.now(); // New tab with different domain
+      }
+    } else if (urlChanged) {
       metrics.activeUrl = url;
+      if (domainChanged) {
+        metrics.currentSiteArrivalTime = Date.now(); // Domain changed = reset timer
+      }
+      // Same domain, different page = keep timer running
     }
     
     await this.setFocusMetrics(metrics);
@@ -114,12 +135,14 @@ export class FocusMonitor {
   }
 
   static getDefaultFocusMetrics(): FocusMetrics {
+    const now = Date.now();
     return {
       activeTabId: null,
       activeUrl: null,
       windowFocused: true,
       tabVisible: true,
-      lastActivityTimestamp: Date.now(),
+      lastActivityTimestamp: now,
+      currentSiteArrivalTime: now,
       tabSwitchCount: 0,
       distractionScore: 1.0,
       timeOnDistractingSites: 0,
