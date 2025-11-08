@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import p5 from 'p5';
-import { ForestRenderer } from '../forest/ForestRenderer';
+import { CanvasForestRenderer } from '../forest/CanvasForestRenderer';
 import { ForestState } from '../types';
 
 interface ForestCanvasProps {
@@ -10,57 +9,45 @@ interface ForestCanvasProps {
 }
 
 export const ForestCanvas: React.FC<ForestCanvasProps> = ({ width, height, forestState }) => {
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const p5InstanceRef = useRef<p5 | null>(null);
-  const rendererRef = useRef<ForestRenderer | null>(null);
-  const forestStateRef = useRef<ForestState>(forestState);
-
-  // Update forest state ref when it changes
-  useEffect(() => {
-    forestStateRef.current = forestState;
-  }, [forestState]);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rendererRef = useRef<CanvasForestRenderer | null>(null);
+  const animationFrameRef = useRef<number>();
 
   useEffect(() => {
-    if (!canvasRef.current) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-    // Cleanup previous instance
-    if (p5InstanceRef.current) {
-      p5InstanceRef.current.remove();
-      p5InstanceRef.current = null;
-    }
+    canvas.width = width;
+    canvas.height = height;
 
-    // Create new p5 instance
-    const sketch = (p: p5) => {
-      let renderer: ForestRenderer | null = null;
+    const renderer = new CanvasForestRenderer(canvas);
+    rendererRef.current = renderer;
 
-      p.setup = () => {
-        p.createCanvas(width, height);
-        renderer = new ForestRenderer(p, width, height);
-        rendererRef.current = renderer;
-        renderer.setup();
-        renderer.setForestState(forestStateRef.current);
-      };
-
-      p.draw = () => {
-        if (renderer) {
-          // Update forest state from ref
-          renderer.setForestState(forestStateRef.current);
-          renderer.draw();
-        }
-      };
+    const animate = () => {
+      if (rendererRef.current) {
+        rendererRef.current.setForestState(forestState);
+        rendererRef.current.draw();
+      }
+      animationFrameRef.current = requestAnimationFrame(animate);
     };
 
-    p5InstanceRef.current = new p5(sketch, canvasRef.current);
+    animate();
 
     return () => {
-      if (p5InstanceRef.current) {
-        p5InstanceRef.current.remove();
-        p5InstanceRef.current = null;
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
       rendererRef.current = null;
     };
   }, [width, height]);
 
-  return <div ref={canvasRef} style={{ width, height }} />;
+  // Update forest state when it changes
+  useEffect(() => {
+    if (rendererRef.current) {
+      rendererRef.current.setForestState(forestState);
+    }
+  }, [forestState]);
+
+  return <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: '100%' }} />;
 };
 

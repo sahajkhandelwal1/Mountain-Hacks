@@ -27,7 +27,7 @@ function renameHtmlPlugin() {
         { src: 'dist/src/popup/index.html', dest: 'dist/popup.html' },
         { src: 'dist/src/newtab/index.html', dest: 'dist/newtab.html' }
       ];
-      
+
       htmlFiles.forEach(({ src, dest }) => {
         if (existsSync(src)) {
           // Ensure destination directory exists
@@ -44,7 +44,7 @@ function renameHtmlPlugin() {
           }
         }
       });
-      
+
       // Copy manifest.json
       if (existsSync('manifest.json')) {
         copyFileSync('manifest.json', 'dist/manifest.json');
@@ -65,6 +65,7 @@ function renameHtmlPlugin() {
 }
 
 export default defineConfig({
+  base: './', // Use relative paths for Chrome extension
   plugins: [
     react(),
     renameHtmlPlugin()
@@ -72,6 +73,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    minify: false, // Disable minification to avoid eval
     rollupOptions: {
       input: {
         popup: resolve(__dirname, 'src/popup/index.html'),
@@ -80,6 +82,7 @@ export default defineConfig({
         content: resolve(__dirname, 'src/content/content.ts')
       },
       output: {
+        format: 'es',
         entryFileNames: (chunkInfo) => {
           if (chunkInfo.name === 'background') return 'background.js';
           if (chunkInfo.name === 'content') return 'content.js';

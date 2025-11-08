@@ -1,31 +1,6 @@
 import React, { useState } from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement
-} from 'chart.js';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { SessionState, ForestState, FocusMetrics } from '../shared/types';
 import { formatTime, formatMinutes } from '../shared/utils/helpers';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement
-);
 
 interface StatsPanelProps {
   session: SessionState;
@@ -49,42 +24,7 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({
   const treesGrown = forest.trees.filter(t => t.status === 'healthy').length;
   const treesBurned = forest.trees.filter(t => t.status === 'burnt').length;
   const treesBurning = forest.trees.filter(t => t.status === 'burning').length;
-
-  // Focus score chart data
-  const focusScoreData = {
-    labels: ['Focus Score'],
-    datasets: [
-      {
-        label: 'Current Score',
-        data: [session.focusScore],
-        backgroundColor: 'rgba(34, 139, 34, 0.6)',
-        borderColor: 'rgba(34, 139, 34, 1)',
-        borderWidth: 2
-      }
-    ]
-  };
-
-  // Trees chart data
-  const treesData = {
-    labels: ['Healthy', 'Burning', 'Burnt'],
-    datasets: [
-      {
-        label: 'Trees',
-        data: [treesGrown, treesBurning, treesBurned],
-        backgroundColor: [
-          'rgba(34, 139, 34, 0.6)',
-          'rgba(255, 69, 0, 0.6)',
-          'rgba(47, 47, 47, 0.6)'
-        ],
-        borderColor: [
-          'rgba(34, 139, 34, 1)',
-          'rgba(255, 69, 0, 1)',
-          'rgba(47, 47, 47, 1)'
-        ],
-        borderWidth: 2
-      }
-    ]
-  };
+  const totalTrees = treesGrown + treesBurned + treesBurning;
 
   return (
     <div className="stats-panel">
@@ -111,20 +51,42 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({
         <div className="charts-container">
           <div className="chart-wrapper">
             <h3>Focus Score</h3>
-            <Bar data={focusScoreData} options={{ 
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                y: { beginAtZero: true, max: 100 }
-              }
-            }} />
+            <div className="progress-bar">
+              <div 
+                className="progress-fill" 
+                style={{ 
+                  width: `${session.focusScore}%`,
+                  backgroundColor: session.focusScore > 70 ? '#228B22' : session.focusScore > 40 ? '#FFA500' : '#FF4500'
+                }}
+              />
+              <span className="progress-label">{Math.round(session.focusScore)}%</span>
+            </div>
           </div>
           <div className="chart-wrapper">
             <h3>Forest Status</h3>
-            <Doughnut data={treesData} options={{ 
-              responsive: true,
-              maintainAspectRatio: false
-            }} />
+            <div className="tree-stats">
+              <div className="tree-stat-item">
+                <div className="tree-stat-bar" style={{ 
+                  width: totalTrees > 0 ? `${(treesGrown / totalTrees) * 100}%` : '0%',
+                  backgroundColor: '#228B22'
+                }} />
+                <span>Healthy: {treesGrown}</span>
+              </div>
+              <div className="tree-stat-item">
+                <div className="tree-stat-bar" style={{ 
+                  width: totalTrees > 0 ? `${(treesBurning / totalTrees) * 100}%` : '0%',
+                  backgroundColor: '#FF4500'
+                }} />
+                <span>Burning: {treesBurning}</span>
+              </div>
+              <div className="tree-stat-item">
+                <div className="tree-stat-bar" style={{ 
+                  width: totalTrees > 0 ? `${(treesBurned / totalTrees) * 100}%` : '0%',
+                  backgroundColor: '#2F2F2F'
+                }} />
+                <span>Burnt: {treesBurned}</span>
+              </div>
+            </div>
           </div>
         </div>
       )}

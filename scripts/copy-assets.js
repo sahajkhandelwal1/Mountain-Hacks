@@ -7,6 +7,25 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Fix HTML file paths to be relative (for Chrome extension)
+function fixHtmlPaths(htmlPath) {
+  if (fs.existsSync(htmlPath)) {
+    let html = fs.readFileSync(htmlPath, 'utf-8');
+    // Replace absolute paths with relative paths
+    html = html.replace(/src="\/assets\//g, 'src="./assets/');
+    html = html.replace(/href="\/assets\//g, 'href="./assets/');
+    // Replace relative paths that go up directories (../../assets/) with ./assets/
+    html = html.replace(/src="\.\.\/\.\.\/assets\//g, 'src="./assets/');
+    html = html.replace(/href="\.\.\/\.\.\/assets\//g, 'href="./assets/');
+    // Also handle any other relative path variations
+    html = html.replace(/src="\.\.\/assets\//g, 'src="./assets/');
+    html = html.replace(/href="\.\.\/assets\//g, 'href="./assets/');
+    fs.writeFileSync(htmlPath, html);
+    return true;
+  }
+  return false;
+}
+
 // Move HTML files from src subdirectories to root
 function moveHtmlFiles() {
   const htmlFiles = [
@@ -22,6 +41,8 @@ function moveHtmlFiles() {
         fs.mkdirSync(destDir, { recursive: true });
       }
       fs.copyFileSync(src, dest);
+      // Fix paths in the copied file
+      fixHtmlPaths(dest);
       console.log(`Moved ${path.basename(src)} to ${path.basename(dest)}`);
       // Remove source file
       try {
@@ -29,6 +50,18 @@ function moveHtmlFiles() {
       } catch (e) {
         // Ignore if file doesn't exist
       }
+    }
+  });
+  
+  // Also fix paths in existing HTML files (in case they're already in place)
+  const existingHtmlFiles = [
+    path.join(__dirname, '../dist/popup.html'),
+    path.join(__dirname, '../dist/newtab.html')
+  ];
+  
+  existingHtmlFiles.forEach(htmlPath => {
+    if (fixHtmlPaths(htmlPath)) {
+      console.log(`Fixed paths in ${path.basename(htmlPath)}`);
     }
   });
 }
