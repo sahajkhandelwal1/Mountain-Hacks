@@ -76,19 +76,28 @@ export class FocusMonitor {
       }
     };
     
+    const isNewTabPage = (urlStr: string): boolean => {
+      return urlStr.includes('chrome-extension://') || urlStr.includes('newtab.html');
+    };
+    
     const previousDomain = getCurrentDomain(metrics.activeUrl);
     const newDomain = getCurrentDomain(url);
     const domainChanged = previousDomain !== newDomain;
     
+    // Store previous URL if current URL is not a new tab page
+    if (metrics.activeUrl && !isNewTabPage(metrics.activeUrl)) {
+      metrics.previousUrl = metrics.activeUrl;
+    }
+    
     if (metrics.activeTabId !== tabId) {
       metrics.activeTabId = tabId;
       metrics.activeUrl = url;
-      if (domainChanged) {
+      if (domainChanged && !isNewTabPage(url)) {
         metrics.currentSiteArrivalTime = Date.now(); // New tab with different domain
       }
     } else if (urlChanged) {
       metrics.activeUrl = url;
-      if (domainChanged) {
+      if (domainChanged && !isNewTabPage(url)) {
         metrics.currentSiteArrivalTime = Date.now(); // Domain changed = reset timer
       }
       // Same domain, different page = keep timer running
@@ -139,6 +148,7 @@ export class FocusMonitor {
     return {
       activeTabId: null,
       activeUrl: null,
+      previousUrl: null,
       windowFocused: true,
       tabVisible: true,
       lastActivityTimestamp: now,

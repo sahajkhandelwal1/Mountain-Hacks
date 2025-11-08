@@ -50,8 +50,12 @@ export class BackgroundFocusTracker {
     // Use LLM to analyze focus (falls back to heuristics if no API key)
     const timeOnSite = Date.now() - (metrics.currentSiteArrivalTime || Date.now());
     
+    // Use previous URL if currently on new tab page
+    const isOnNewTab = metrics.activeUrl?.includes('chrome-extension://') || metrics.activeUrl?.includes('newtab.html');
+    const urlToAnalyze = isOnNewTab && metrics.previousUrl ? metrics.previousUrl : (metrics.activeUrl || '');
+    
     const analysisData: FocusAnalysisRequest = {
-      currentUrl: metrics.activeUrl || '',
+      currentUrl: urlToAnalyze,
       tabSwitchCount: metrics.tabSwitchCount || 0,
       timeOnCurrentSite: timeOnSite,
       recentUrls: [], // Could track this in future
@@ -64,7 +68,7 @@ export class BackgroundFocusTracker {
       distractionSiteVisits: Math.floor((metrics.timeOnDistractingSites || 0) / 60000)
     };
     
-    console.log(`📊 Time on ${metrics.activeUrl}: ${Math.floor(timeOnSite / 1000)}s`);
+    console.log(`📊 Analyzing: ${urlToAnalyze} (${isOnNewTab ? 'using previous URL' : 'current URL'}), Time: ${Math.floor(timeOnSite / 1000)}s`);
 
     const analysis = await LLMFocusAnalyzer.analyzeFocus(analysisData);
     const focusScore = analysis.focusScore;
@@ -101,7 +105,11 @@ export class BackgroundFocusTracker {
 
     // Always grow trees passively when session is active
     if (!isInactive) {
-      await SessionStorage.incrementFocusedMinutes();
+      // Calculate actual focused minutes from session start time
+      if (session.startTime) {
+        const elapsedMinutes = Math.floor((Date.now() - session.startTime) / 60000);
+        await SessionStorage.setFocusedMinutes(elapsedMinutes);
+      }
       await SessionManager.addTreeOnFocusTick(focusScore);
     }
 

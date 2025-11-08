@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ForestCanvas } from '../shared/components/ForestCanvas';
 import { SessionControls } from '../popup/SessionControls';
 import { StatsPanel } from '../popup/StatsPanel';
+import { FocusInsights } from '../popup/FocusInsights';
 import { SessionState, ForestState, FocusMetrics } from '../shared/types';
 import { SessionStorage } from '../shared/storage/sessionStorage';
 import { ForestStorage } from '../shared/storage/forestStorage';
@@ -100,6 +101,8 @@ export const NewTab: React.FC = () => {
             onStartSession={handleStartSession}
             onEndSession={handleEndSession}
           />
+
+          {session.active && <FocusInsights />}
 
           <StatsPanel
             session={session}

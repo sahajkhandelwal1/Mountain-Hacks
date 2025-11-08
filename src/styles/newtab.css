@@ -245,3 +245,108 @@ header h1 {
   }
 }
 
+
+/* Focus Insights on New Tab */
+.sidebar .focus-insights {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.sidebar .focus-insights h3 {
+  font-size: 16px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.sidebar .current-site-info {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 8px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.sidebar .site-score {
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.sidebar .focus-score-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  margin-bottom: 12px;
+}
+
+.sidebar .score-circle {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 4px solid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .score-number {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.sidebar .score-label {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.sidebar .distraction-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  text-transform: capitalize;
+}
+
+.sidebar .analysis-reasoning {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.sidebar .suggestions {
+  margin-top: 10px;
+}
+
+.sidebar .suggestions h4 {
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.sidebar .suggestions ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar .suggestions li {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 10px;
+  border-radius: 5px;
+  margin-bottom: 5px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.sidebar .last-update {
+  text-align: center;
+  font-size: 10px;
+  opacity: 0.6;
+  margin-top: 8px;
+}

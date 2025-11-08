@@ -54,6 +54,7 @@ export interface ForestState {
 export interface FocusMetrics {
   activeTabId: number | null;
   activeUrl: string | null;
+  previousUrl: string | null; // Last non-newtab URL
   windowFocused: boolean;
   tabVisible: boolean;
   lastActivityTimestamp: number;

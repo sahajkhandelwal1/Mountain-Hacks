@@ -80,9 +80,13 @@ export class SessionStorage {
     await this.updateSessionState({ paused });
   }
 
-  static async incrementFocusedMinutes(): Promise<void> {
+  static async incrementFocusedMinutes(minutes: number = 1): Promise<void> {
     const current = await this.getSessionState();
-    await this.updateSessionState({ focusedMinutes: current.focusedMinutes + 1 });
+    await this.updateSessionState({ focusedMinutes: current.focusedMinutes + minutes });
+  }
+
+  static async setFocusedMinutes(minutes: number): Promise<void> {
+    await this.updateSessionState({ focusedMinutes: minutes });
   }
 
   static getDefaultSessionState(): SessionState {
