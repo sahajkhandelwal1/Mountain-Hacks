@@ -100,6 +100,11 @@ export class FocusMonitor {
     return metrics.distractionScore < this.WILDFIRE_TRIGGER_THRESHOLD;
   }
 
+  static async incrementTabSwitch(): Promise<void> {
+    const metrics = await this.getFocusMetrics();
+    await this.updateFocusMetrics({ tabSwitchCount: (metrics.tabSwitchCount || 0) + 1 });
+  }
+
   static async resetTabSwitchCount(): Promise<void> {
     await this.updateFocusMetrics({ tabSwitchCount: 0 });
   }

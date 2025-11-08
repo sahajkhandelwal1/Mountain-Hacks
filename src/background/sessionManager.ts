@@ -29,8 +29,8 @@ export class SessionManager {
       console.error('Error generating starter assets:', error);
     }
     
-    // Create initial trees (optional - can start empty)
-    // await this.createInitialForest();
+    // Create initial trees
+    await this.createInitialForest();
     
     return sessionId;
   }
@@ -57,62 +57,106 @@ export class SessionManager {
   }
 
   static async createInitialForest(): Promise<void> {
-    // Create a few starter trees
-    const treeCount = 3;
+    // Clear any existing forest first
+    await ForestStorage.clearForest();
+    
+    // Create a few starter trees (small saplings)
+    const treeCount = 5;
+    const groundY = 500; // Match canvas groundY
+    
     for (let i = 0; i < treeCount; i++) {
       const tree: Tree = {
         id: generateId(),
         type: getRandomTreeType(),
-        height: randomBetween(20, 40),
-        x: randomBetween(50, 350),
-        y: randomBetween(200, 280),
+        height: randomBetween(10, 20), // Start small
+        x: randomBetween(100, 700),
+        y: groundY,
         status: 'healthy',
-        age: 0
+        age: 0,
+        growthStage: 0 // 0 = sapling, 1 = young, 2 = mature, 3 = full grown
       };
+      console.log('Creating tree:', tree);
       await ForestStorage.addTree(tree);
     }
+    
+    const forest = await ForestStorage.getForestState();
+    console.log('Forest after creation:', forest.trees.length, 'trees');
   }
 
   static async addTreeOnFocusTick(focusScore: number): Promise<void> {
-    // Add a tree based on focus score
-    // Higher focus score = better tree
-    const shouldAddTree = focusScore > 0.5 && Math.random() > 0.3; // 70% chance if focused
+    // Grow existing trees first
+    await this.growExistingTrees();
     
-    if (shouldAddTree) {
-      const tree: Tree = {
-        id: generateId(),
-        type: getRandomTreeType(),
-        height: randomBetween(15, 35) * (focusScore),
-        x: randomBetween(50, 350),
-        y: randomBetween(200, 280),
-        status: 'healthy',
-        age: 0
-      };
-      
-      // Try to generate AI asset for the tree
-      try {
-        const asset = await AIAssetGenerator.generateDynamicAsset(focusScore, 'tree');
-        tree.assetUrl = asset.url;
-      } catch (error) {
-        console.error('Error generating tree asset:', error);
-      }
-      
-      await ForestStorage.addTree(tree);
-      
-      // Add animal every 5 trees
-      const treeCount = await ForestStorage.getTreeCount();
-      if (treeCount > 0 && treeCount % 5 === 0) {
-        await this.addAnimal(focusScore);
+    // Add new sapling every tick
+    const groundY = 500;
+    
+    const tree: Tree = {
+      id: generateId(),
+      type: getRandomTreeType(),
+      height: randomBetween(10, 20), // Start as small sapling
+      x: randomBetween(100, 700),
+      y: groundY,
+      status: 'healthy',
+      age: 0,
+      growthStage: 0
+    };
+    
+    console.log('Adding new sapling:', tree);
+    
+    // Try to generate AI asset for the tree
+    try {
+      const asset = await AIAssetGenerator.generateDynamicAsset(focusScore, 'tree');
+      tree.assetUrl = asset.url;
+    } catch (error) {
+      console.error('Error generating tree asset:', error);
+    }
+    
+    await ForestStorage.addTree(tree);
+  }
+
+  static async growExistingTrees(): Promise<void> {
+    const forest = await ForestStorage.getForestState();
+    
+    for (const tree of forest.trees) {
+      if (tree.status === 'healthy' || tree.status === 'recovering') {
+        // Increment age
+        tree.age = (tree.age || 0) + 1;
+        
+        // Grow tree based on age
+        const maxHeight = 100;
+        const growthRate = 2; // pixels per tick
+        
+        if (tree.height < maxHeight) {
+          tree.height = Math.min(maxHeight, tree.height + growthRate);
+        }
+        
+        // Update growth stage
+        if (tree.height < 30) {
+          tree.growthStage = 0; // Sapling
+        } else if (tree.height < 50) {
+          tree.growthStage = 1; // Young
+        } else if (tree.height < 75) {
+          tree.growthStage = 2; // Mature
+        } else {
+          tree.growthStage = 3; // Full grown
+        }
+        
+        await ForestStorage.updateTree(tree.id, { 
+          height: tree.height, 
+          age: tree.age,
+          growthStage: tree.growthStage 
+        });
       }
     }
   }
 
   static async addAnimal(focusScore: number): Promise<void> {
+    const groundY = 500;
     const animal: Animal = {
       id: generateId(),
       type: getRandomAnimalType(),
-      x: randomBetween(100, 300),
-      y: randomBetween(220, 270),
+      x: randomBetween(150, 650),
+      y: groundY - 10,
       status: 'visible'
     };
     

@@ -50,7 +50,21 @@ export class SessionStorage {
   }
 
   static async updateFocusScore(score: number): Promise<void> {
-    await this.updateSessionState({ focusScore: Math.max(0, Math.min(100, score)) });
+    const current = await this.getSessionState();
+    
+    // Adaptive weighting: heavily favor recovery
+    let smoothedScore;
+    if (score > current.focusScore) {
+      // Recovering: 95% new score (very fast recovery)
+      smoothedScore = current.focusScore * 0.05 + score * 0.95;
+    } else {
+      // Declining: 60% new score (moderate decline)
+      smoothedScore = current.focusScore * 0.4 + score * 0.6;
+    }
+    
+    console.log(`Focus score update: ${current.focusScore.toFixed(1)} → ${score.toFixed(1)} = ${smoothedScore.toFixed(1)}`);
+    
+    await this.updateSessionState({ focusScore: Math.max(0, Math.min(100, smoothedScore)) });
   }
 
   static async incrementDistractionCount(): Promise<void> {

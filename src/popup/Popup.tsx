@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { ForestCanvas } from '../shared/components/ForestCanvas';
 import { SessionControls } from './SessionControls';
 import { StatsPanel } from './StatsPanel';
+import { FocusInsights } from './FocusInsights';
+import { APISettings } from './APISettings';
+import { DebugPanel } from './DebugPanel';
 import { SessionState, ForestState, FocusMetrics } from '../shared/types';
 import { SessionStorage } from '../shared/storage/sessionStorage';
 import { ForestStorage } from '../shared/storage/forestStorage';
@@ -91,6 +94,10 @@ export const Popup: React.FC = () => {
         )}
       </div>
 
+      <APISettings />
+
+      {session.active && <FocusInsights />}
+
       <StatsPanel
         session={session}
         forest={forest}
@@ -103,6 +110,8 @@ export const Popup: React.FC = () => {
         onStartSession={handleStartSession}
         onEndSession={handleEndSession}
       />
+
+      <DebugPanel />
     </div>
   );
 };

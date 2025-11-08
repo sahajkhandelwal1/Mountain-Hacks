@@ -6,6 +6,7 @@ import { BackgroundWildfireController } from './wildfireController';
 import { ActivityEvent } from '../shared/types';
 import { DistractionDetector } from '../shared/monitoring/distractionDetector';
 import { WildfireController } from '../shared/forest/Wildfire';
+import { LLMFocusAnalyzer, FocusAnalysisRequest } from '../shared/api/llmFocusAnalyzer';
 
 export class BackgroundFocusTracker {
   private static focusTickInterval: number | null = null;
@@ -13,10 +14,10 @@ export class BackgroundFocusTracker {
   private static readonly WILDFIRE_TRIGGER_DURATION = 60000; // 60 seconds
 
   static startMonitoring(): void {
-    // Focus tick every 1 minute
+    // Focus tick every 10 seconds for responsive feedback
     this.focusTickInterval = window.setInterval(async () => {
       await this.performFocusTick();
-    }, 60000);
+    }, 10000);
   }
 
   static stopMonitoring(): void {
@@ -27,7 +28,7 @@ export class BackgroundFocusTracker {
     this.lowFocusStartTime = null;
   }
 
-  private static async performFocusTick(): Promise<void> {
+  static async performFocusTick(): Promise<void> {
     const session = await SessionStorage.getSessionState();
     if (!session.active || session.paused) {
       return;
@@ -36,18 +37,37 @@ export class BackgroundFocusTracker {
     // Get current focus metrics
     const metrics = await FocusMonitor.getFocusMetrics();
     
-    // Calculate distraction score based on current URL and activity
-    const distractionScore = await FocusMonitor.calculateDistractionScore(
-      metrics.activeUrl,
-      metrics.tabSwitchCount,
-      metrics.timeOnDistractingSites
-    );
+    // Use LLM to analyze focus (falls back to heuristics if no API key)
+    const analysisData: FocusAnalysisRequest = {
+      currentUrl: metrics.activeUrl || '',
+      tabSwitchCount: metrics.tabSwitchCount || 0,
+      timeOnCurrentSite: Date.now() - (metrics.lastActivityTimestamp || Date.now()),
+      recentUrls: [], // Could track this in future
+      userActivity: {
+        mouseMovements: 0,
+        keystrokes: 0,
+        scrolls: 0
+      },
+      sessionDuration: session.startTime ? Date.now() - session.startTime : 0,
+      distractionSiteVisits: Math.floor((metrics.timeOnDistractingSites || 0) / 60000)
+    };
 
-    // Update distraction score
+    const analysis = await LLMFocusAnalyzer.analyzeFocus(analysisData);
+    const focusScore = analysis.focusScore;
+    
+    console.log('LLM Focus Analysis:', analysis);
+    
+    // Calculate distraction score (inverse of focus score, 0-1 scale)
+    const distractionScore = (100 - focusScore) / 100;
+
+    // Update metrics
     await FocusMonitor.updateFocusMetrics({ distractionScore });
-
-    // Update session focus score (convert 0-1 to 0-100)
-    const focusScore = distractionScore * 100;
+    
+    // Store LLM suggestions for display
+    await chrome.storage.local.set({ 
+      lastFocusAnalysis: analysis,
+      lastAnalysisTime: Date.now()
+    });
     await SessionStorage.updateFocusScore(focusScore);
 
     // Check for inactivity
@@ -65,8 +85,8 @@ export class BackgroundFocusTracker {
       await SessionStorage.setPaused(false);
     }
 
-    // If focused, add tree
-    if (focusScore > 50 && !isInactive) {
+    // Always grow trees passively when session is active
+    if (!isInactive) {
       await SessionStorage.incrementFocusedMinutes();
       await SessionManager.addTreeOnFocusTick(focusScore);
     }
@@ -119,6 +139,9 @@ export class BackgroundFocusTracker {
   }
 
   static async handleTabChange(tabId: number, url: string): Promise<void> {
+    // Increment tab switch counter
+    await FocusMonitor.incrementTabSwitch();
+    
     await FocusMonitor.updateTabInfo(tabId, url);
     
     // Check if it's a distraction site

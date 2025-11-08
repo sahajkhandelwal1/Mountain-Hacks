@@ -78,6 +78,68 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse({ success: true });
           break;
 
+        case 'triggerFocusAnalysis':
+          try {
+            // Manually trigger a focus analysis
+            await BackgroundFocusTracker.performFocusTick();
+            sendResponse({ success: true, message: 'Analysis completed' });
+          } catch (error: any) {
+            sendResponse({ success: false, error: error.message });
+          }
+          break;
+
+        case 'testAPI':
+          try {
+            const config = await chrome.storage.local.get('apiConfig');
+            const apiConfig = config.apiConfig || {};
+            
+            if (apiConfig.provider === 'mock' || !apiConfig.apiKey) {
+              sendResponse({ 
+                success: true, 
+                message: 'Using mock mode (no API key set). Set an OpenAI API key to test.' 
+              });
+              break;
+            }
+            
+            // Test OpenAI API directly
+            const testResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${apiConfig.apiKey}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: [
+                  { role: 'user', content: 'Say "API test successful" if you can read this.' }
+                ],
+                max_tokens: 20
+              })
+            });
+            
+            if (!testResponse.ok) {
+              const errorData = await testResponse.json();
+              sendResponse({ 
+                success: false, 
+                error: `API Error: ${testResponse.status} - ${errorData.error?.message || 'Unknown error'}` 
+              });
+              break;
+            }
+            
+            const result = await testResponse.json();
+            sendResponse({ 
+              success: true, 
+              message: 'OpenAI API is working! ✓',
+              response: result.choices[0].message.content
+            });
+          } catch (error: any) {
+            sendResponse({ 
+              success: false, 
+              error: `Connection error: ${error.message}` 
+            });
+          }
+          break;
+
         default:
           sendResponse({ success: false, error: 'Unknown action' });
       }
