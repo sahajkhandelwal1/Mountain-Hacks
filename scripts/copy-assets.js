@@ -120,9 +120,36 @@ function copyBlocked() {
   }
 }
 
+// Copy images directory
+function copyImages() {
+  const srcDir = path.join(__dirname, '../public/images');
+  const destDir = path.join(__dirname, '../dist/images');
+  
+  if (fs.existsSync(srcDir)) {
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true });
+    }
+    
+    const files = fs.readdirSync(srcDir);
+    let copied = 0;
+    files.forEach(file => {
+      const srcPath = path.join(srcDir, file);
+      const destPath = path.join(destDir, file);
+      if (fs.statSync(srcPath).isFile()) {
+        fs.copyFileSync(srcPath, destPath);
+        copied++;
+      }
+    });
+    if (copied > 0) {
+      console.log(`Copied ${copied} image(s) successfully`);
+    }
+  }
+}
+
 // Run all copy operations
 moveHtmlFiles();
 copyIcons();
 copyManifest();
 copyBlocked();
+copyImages();
 

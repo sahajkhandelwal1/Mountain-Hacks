@@ -119,7 +119,7 @@ export const DebugPanel: React.FC = () => {
 
           {debugInfo.lastAnalysis && (
             <div className="debug-item">
-              <strong>Last Score:</strong> {debugInfo.lastAnalysis.focusScore}
+              <strong>Last Score:</strong> {Math.round(debugInfo.lastAnalysis.focusScore)}
               <br />
               <small>{debugInfo.lastAnalysis.reasoning}</small>
             </div>

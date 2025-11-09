@@ -11,7 +11,7 @@ import { LLMFocusAnalyzer, FocusAnalysisRequest } from '../shared/api/llmFocusAn
 export class BackgroundFocusTracker {
   private static focusTickInterval: number | null = null;
   private static lowFocusStartTime: number | null = null;
-  private static readonly WILDFIRE_TRIGGER_DURATION = 60000; // 60 seconds
+  private static readonly WILDFIRE_TRIGGER_DURATION = 40000; // 40 seconds (2 analysis cycles)
 
   static startMonitoring(): void {
     console.log('🎯 Focus monitoring started - analysis every 10 seconds');
@@ -113,16 +113,20 @@ export class BackgroundFocusTracker {
       await SessionManager.addTreeOnFocusTick(focusScore);
     }
 
-    // Check for wildfire trigger
-    if (distractionScore < 0.3) {
+    // Check for wildfire trigger - trigger when focus score is LOW (< 30)
+    if (focusScore < 30) {
       if (this.lowFocusStartTime === null) {
         this.lowFocusStartTime = Date.now();
+        console.log('⚠️ Low focus detected, starting wildfire timer...');
       } else {
         const lowFocusDuration = Date.now() - this.lowFocusStartTime;
+        console.log(`🔥 Low focus for ${Math.floor(lowFocusDuration / 1000)}s (need ${this.WILDFIRE_TRIGGER_DURATION / 1000}s)`);
+        
         if (lowFocusDuration >= this.WILDFIRE_TRIGGER_DURATION) {
           // Trigger wildfire
           const forestState = await ForestStorage.getForestState();
           if (!forestState.wildfire.active) {
+            console.log('🔥🔥🔥 WILDFIRE TRIGGERED!');
             await BackgroundWildfireController.triggerWildfire();
             chrome.notifications.create({
               type: 'basic',
@@ -135,11 +139,15 @@ export class BackgroundFocusTracker {
       }
     } else {
       // Reset low focus timer if focus improves
-      this.lowFocusStartTime = null;
+      if (this.lowFocusStartTime !== null) {
+        console.log('✅ Focus improved, wildfire timer reset');
+        this.lowFocusStartTime = null;
+      }
       
       // If focus improves and wildfire is active, stop it
       const forestState = await ForestStorage.getForestState();
       if (forestState.wildfire.active && focusScore > 70) {
+        console.log('🌲 Stopping wildfire and recovering trees');
         await WildfireController.stopWildfire();
         await WildfireController.recoverTrees();
       }

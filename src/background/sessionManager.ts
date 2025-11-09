@@ -10,11 +10,16 @@ export class SessionManager {
   static async startSession(): Promise<string> {
     const sessionId = generateId();
     
+    console.log('🌱 Starting new session:', sessionId);
+    
     // Initialize session state
     await SessionStorage.startSession(sessionId);
     
-    // Initialize forest
-    await ForestStorage.initializeForest();
+    // Clear old forest and create fresh one
+    await this.createInitialForest();
+    
+    // Mark forest as active
+    await ForestStorage.updateForestState({ sessionActive: true });
     
     // Reset focus metrics
     await FocusMonitor.clearFocusMetrics();
@@ -28,9 +33,6 @@ export class SessionManager {
     } catch (error) {
       console.error('Error generating starter assets:', error);
     }
-    
-    // Create initial trees
-    await this.createInitialForest();
     
     return sessionId;
   }

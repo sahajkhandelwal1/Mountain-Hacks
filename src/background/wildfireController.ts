@@ -6,7 +6,8 @@ export class BackgroundWildfireController {
   private static updateInterval: number | null = null;
 
   static startMonitoring(): void {
-    // Update wildfire every 2 seconds
+    console.log('🔥 Wildfire monitoring started');
+    // Update wildfire every 1 second for faster burning
     this.updateInterval = window.setInterval(async () => {
       const session = await SessionStorage.getSessionState();
       if (!session.active) {
@@ -15,9 +16,10 @@ export class BackgroundWildfireController {
 
       const forestState = await ForestStorage.getForestState();
       if (forestState.wildfire.active) {
+        console.log(`🔥 Updating wildfire - ${forestState.wildfire.affectedTreeIds.length} trees burning`);
         await WildfireController.updateWildfire();
       }
-    }, 2000);
+    }, 1000); // Update every second for faster action
   }
 
   static stopMonitoring(): void {
