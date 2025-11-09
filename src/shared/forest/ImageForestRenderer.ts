@@ -32,13 +32,13 @@ export class ImageForestRenderer {
   }
 
   private loadTreeImages(): void {
-    // Load all new tree assets (PNG with transparency)
+    // Load all new tree assets (PNG with transparency) - shuffled order
     const treeTypes = [
-      'row-1-column-1', 'row-1-column-2', 'row-1-column-3', 'row-1-column-4', 
-      'row-1-column-5', 'row-1-column-6', 'row-1-column-7',
-      'row-3-column-2', 'row-3-column-3', 'row-4-column-1'
+      'row-3-column-2', 'row-1-column-7', 'row-4-column-1', 'row-1-column-3',
+      'row-1-column-5', 'row-3-column-3', 'row-1-column-1', 'row-1-column-6',
+      'row-1-column-4', 'row-1-column-2'
     ];
-    
+
     treeTypes.forEach(type => {
       const img = new Image();
       img.onload = () => {
@@ -69,10 +69,10 @@ export class ImageForestRenderer {
     }
 
     const wildfireLevel = this.forestState.wildfire.level || 0;
-    
+
     // Draw ground
     this.drawGround();
-    
+
     const sortedTrees = [...this.forestState.trees].sort((a, b) => a.y - b.y);
 
     sortedTrees.forEach((tree, index) => {
@@ -84,7 +84,7 @@ export class ImageForestRenderer {
   private drawGround(): void {
     const groundY = this.canvas.height / 2 + 50; // Slightly below center
     const groundHeight = this.canvas.height - groundY;
-    
+
     // Solid brown ground - no gradient, no texture
     this.ctx.fillStyle = 'rgb(60, 40, 25)';
     this.ctx.fillRect(0, groundY, this.canvas.width, groundHeight);
@@ -98,11 +98,11 @@ export class ImageForestRenderer {
     }
 
     const { height, status } = tree;
-    
+
     // FORCE trees to center of canvas regardless of stored position
     const canvasCenterX = this.canvas.width / 2;
     const canvasCenterY = this.canvas.height / 2;
-    
+
     // Use tree's stored X as an offset from center
     // Logo + search bar area is roughly 700-800px wide
     // Spread trees across that full width
@@ -110,19 +110,19 @@ export class ImageForestRenderer {
     const offsetX = (tree.x - 960) * (forestWidth / 400); // Even wider spread
     const x = canvasCenterX + offsetX - 900; // Shift left to center better
     const y = canvasCenterY;
-    
+
     // Scale based on tree maturity (height represents growth)
     // Max height is now 200, scale accordingly
     const maturityScale = Math.min(height / 200, 1.0);
     const depthScale = 0.5 + depthFactor * 0.5;
-    
+
     // Calculate scale - stretch vertically to make trees taller
     const targetHeight = maturityScale * depthScale * 600; // Much taller trees
     const aspectRatio = treeImage.width / treeImage.height;
     const displayHeight = targetHeight;
     const displayWidth = displayHeight * aspectRatio * 0.7; // Narrower width (70% of proportional)
     const alpha = 0.7 + depthFactor * 0.3; // Good opacity
-    
+
     console.log(`Tree: ${tree.type}, Original: ${treeImage.width}x${treeImage.height}, Aspect: ${aspectRatio.toFixed(2)}, Display: ${displayWidth.toFixed(0)}x${displayHeight.toFixed(0)}`);
 
     this.ctx.save();
@@ -142,7 +142,7 @@ export class ImageForestRenderer {
       const burningAlpha = alpha * 0.6; // Tree becomes more transparent
       this.ctx.globalAlpha = burningAlpha;
       this.ctx.filter = 'brightness(0.6) contrast(1.1)'; // Darker, charred look
-      
+
       this.ctx.drawImage(
         treeImage,
         x - displayWidth / 2,
@@ -154,7 +154,7 @@ export class ImageForestRenderer {
       // Fire animation with multiple flames on the tree
       const time = Date.now() / 200;
       const flicker = Math.sin(time) * 10;
-      
+
       // Main fire at top of tree
       this.ctx.globalAlpha = 0.8;
       this.ctx.filter = 'none';
@@ -170,7 +170,7 @@ export class ImageForestRenderer {
         Math.PI * 2
       );
       this.ctx.fill();
-      
+
       // Secondary flames
       this.ctx.globalAlpha = 0.7;
       this.ctx.fillStyle = 'rgba(255, 50, 0, 0.7)';

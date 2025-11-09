@@ -42,11 +42,13 @@ export function distance(x1: number, y1: number, x2: number, y2: number): number
 
 export function getRandomTreeType(): string {
   const types = [
-    'row-1-column-1', 'row-1-column-2', 'row-1-column-3', 'row-1-column-4', 
-    'row-1-column-5', 'row-1-column-6', 'row-1-column-7',
-    'row-3-column-2', 'row-3-column-3', 'row-4-column-1'
+    'row-3-column-2', 'row-1-column-7', 'row-4-column-1', 'row-1-column-3',
+    'row-1-column-5', 'row-3-column-3', 'row-1-column-1', 'row-1-column-6',
+    'row-1-column-4', 'row-1-column-2'
   ];
-  return types[randomIntBetween(0, types.length)];
+  const selected = types[randomIntBetween(0, types.length)];
+  console.log('Selected tree type:', selected);
+  return selected;
 }
 
 export function getRandomAnimalType(): string {

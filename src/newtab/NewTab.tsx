@@ -150,16 +150,24 @@ export function NewTab() {
   };
 
   const handleStartSession = async () => {
-    chrome.runtime.sendMessage({ type: 'START_SESSION' });
-    setSessionStarted(true);
+    const response = await chrome.runtime.sendMessage({ action: 'startSession' });
+    if (response?.success) {
+      setSessionStarted(true);
+      console.log('Session started:', response.sessionId);
+    }
   };
 
   const handlePauseSession = async () => {
-    chrome.runtime.sendMessage({ type: 'PAUSE_SESSION' });
+    const response = await chrome.runtime.sendMessage({ action: 'pauseSession' });
+    console.log('Pause session response:', response);
   };
 
   const handleEndSession = async () => {
-    chrome.runtime.sendMessage({ type: 'END_SESSION' });
+    const response = await chrome.runtime.sendMessage({ action: 'endSession' });
+    if (response?.success) {
+      setSessionStarted(false);
+      console.log('Session ended');
+    }
   };
 
   const handleTestWildfire = async () => {
@@ -173,6 +181,15 @@ export function NewTab() {
           startTime: null,
           spreadingRate: 0.1
         }
+      });
+      
+      // Show notification that fire stopped
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: chrome.runtime.getURL('icons/icon128.png'),
+        title: '🌲 Wildfire Extinguished',
+        message: 'The wildfire has been stopped. Your forest is safe!',
+        priority: 2
       });
     } else {
       // Start a test wildfire
@@ -193,6 +210,15 @@ export function NewTab() {
           await ForestStorage.updateTree(treeId, { status: 'burning' });
         }
       }
+      
+      // Show notification that fire started
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: chrome.runtime.getURL('icons/icon128.png'),
+        title: '🔥 Wildfire Alert!',
+        message: 'A wildfire has started in your forest! Stay focused to stop the spread.',
+        priority: 2
+      });
     }
   };
 
