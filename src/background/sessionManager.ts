@@ -85,13 +85,13 @@ export class SessionManager {
     // Canvas is 40vh tall (~400px) and full width (~1920px)
     const groundY = 200; // Higher up in canvas
     const centerX = 960; // Center of typical 1920px screen
-    const spread = 500; // Spread them out more
+    const spread = 600; // Spread them out even more
     
     for (let i = 0; i < treeCount; i++) {
       const tree: Tree = {
         id: generateId(),
         type: getRandomTreeType(),
-        height: randomBetween(120, 150), // Start much bigger for demo
+        height: randomBetween(80, 180), // Varied heights for visual interest
         x: centerX - spread/2 + randomBetween(0, spread),
         y: groundY,
         status: 'healthy',
@@ -113,12 +113,12 @@ export class SessionManager {
     // Add new sapling every tick
     const groundY = 200; // Higher up in canvas
     const centerX = 960; // Center of screen
-    const spread = 500; // Spread them out
+    const spread = 600; // Spread them out even more
     
     const tree: Tree = {
       id: generateId(),
       type: getRandomTreeType(),
-      height: randomBetween(120, 150), // Start much bigger for demo
+      height: randomBetween(80, 180), // Varied heights for visual interest
       x: centerX - spread/2 + randomBetween(0, spread),
       y: groundY,
       status: 'healthy',
@@ -178,7 +178,7 @@ export class SessionManager {
   static async addAnimal(focusScore: number): Promise<void> {
     const groundY = 200;
     const centerX = 960;
-    const spread = 500;
+    const spread = 600;
     const animal: Animal = {
       id: generateId(),
       type: getRandomAnimalType(),

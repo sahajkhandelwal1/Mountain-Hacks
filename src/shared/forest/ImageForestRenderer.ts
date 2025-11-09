@@ -6,7 +6,7 @@ export class ImageForestRenderer {
   private forestState: ForestState;
   private treeImages: Map<string, HTMLImageElement> = new Map();
   private imagesLoaded = 0;
-  private totalImages = 6;
+  private totalImages = 10;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -32,7 +32,12 @@ export class ImageForestRenderer {
   }
 
   private loadTreeImages(): void {
-    const treeTypes = ['tree1', 'tree2', 'tree3', 'tree4', 'tree5', 'tree6'];
+    // Load all new tree assets (PNG with transparency)
+    const treeTypes = [
+      'row-1-column-1', 'row-1-column-2', 'row-1-column-3', 'row-1-column-4', 
+      'row-1-column-5', 'row-1-column-6', 'row-1-column-7',
+      'row-3-column-2', 'row-3-column-3', 'row-4-column-1'
+    ];
     
     treeTypes.forEach(type => {
       const img = new Image();
@@ -40,6 +45,7 @@ export class ImageForestRenderer {
         this.imagesLoaded++;
         if (this.imagesLoaded === this.totalImages) {
           console.log('Canvas dimensions:', this.canvas.width, 'x', this.canvas.height);
+          console.log('All new trees loaded (PNG with transparency)');
           this.draw();
         }
       };
@@ -79,53 +85,15 @@ export class ImageForestRenderer {
     const groundY = this.canvas.height / 2 + 50; // Slightly below center
     const groundHeight = this.canvas.height - groundY;
     
-    // Create darker brown gradient for ground
-    const gradient = this.ctx.createLinearGradient(0, groundY, 0, this.canvas.height);
-    gradient.addColorStop(0, 'rgba(70, 45, 20, 0.35)'); // Darker brown
-    gradient.addColorStop(0.5, 'rgba(55, 35, 15, 0.4)');
-    gradient.addColorStop(1, 'rgba(40, 25, 10, 0.45)');
-    
-    this.ctx.fillStyle = gradient;
+    // Solid brown ground - no gradient, no texture
+    this.ctx.fillStyle = 'rgb(60, 40, 25)';
     this.ctx.fillRect(0, groundY, this.canvas.width, groundHeight);
-    
-    // Add more texture with varied elements
-    // Small dots/specks
-    this.ctx.fillStyle = 'rgba(50, 30, 15, 0.3)';
-    for (let i = 0; i < 150; i++) {
-      const x = Math.random() * this.canvas.width;
-      const y = groundY + Math.random() * groundHeight;
-      const size = Math.random() * 3 + 1;
-      this.ctx.fillRect(x, y, size, size);
-    }
-    
-    // Horizontal lines for soil texture
-    this.ctx.strokeStyle = 'rgba(60, 40, 20, 0.2)';
-    this.ctx.lineWidth = 1;
-    for (let i = 0; i < 20; i++) {
-      const y = groundY + Math.random() * groundHeight;
-      const startX = Math.random() * this.canvas.width * 0.3;
-      const endX = startX + Math.random() * 200 + 50;
-      this.ctx.beginPath();
-      this.ctx.moveTo(startX, y);
-      this.ctx.lineTo(endX, y);
-      this.ctx.stroke();
-    }
-    
-    // Small rocks/pebbles
-    this.ctx.fillStyle = 'rgba(35, 25, 15, 0.35)';
-    for (let i = 0; i < 30; i++) {
-      const x = Math.random() * this.canvas.width;
-      const y = groundY + Math.random() * groundHeight;
-      this.ctx.beginPath();
-      this.ctx.arc(x, y, Math.random() * 4 + 2, 0, Math.PI * 2);
-      this.ctx.fill();
-    }
   }
 
   private drawTree(tree: Tree, wildfireLevel: number, depthFactor: number): void {
-    const treeImage = this.treeImages.get(tree.type) || this.treeImages.get('tree1');
+    const treeImage = this.treeImages.get(tree.type) || this.treeImages.get('row-1-column-1');
     if (!treeImage) {
-      console.log('No tree image for type:', tree.type);
+      console.log('Tree image not loaded yet:', tree.type);
       return;
     }
 
@@ -138,9 +106,9 @@ export class ImageForestRenderer {
     // Use tree's stored X as an offset from center
     // Logo + search bar area is roughly 700-800px wide
     // Spread trees across that full width
-    const forestWidth = 800;
-    const offsetX = (tree.x - 960) * (forestWidth / 500); // Wider spread
-    const x = canvasCenterX + offsetX - 500; // Shift 500px to the left for full centering
+    const forestWidth = 1000; // Increased spread width
+    const offsetX = (tree.x - 960) * (forestWidth / 400); // Even wider spread
+    const x = canvasCenterX + offsetX - 900; // Shift left to center better
     const y = canvasCenterY;
     
     // Scale based on tree maturity (height represents growth)
@@ -148,15 +116,14 @@ export class ImageForestRenderer {
     const maturityScale = Math.min(height / 200, 1.0);
     const depthScale = 0.5 + depthFactor * 0.5;
     
-    // Calculate scale to maintain aspect ratio
-    // Target height for trees, keep width proportional
-    const targetHeight = maturityScale * depthScale * 450; // Much taller trees
+    // Calculate scale - stretch vertically to make trees taller
+    const targetHeight = maturityScale * depthScale * 600; // Much taller trees
     const aspectRatio = treeImage.width / treeImage.height;
     const displayHeight = targetHeight;
-    const displayWidth = displayHeight * aspectRatio; // Maintain aspect ratio
+    const displayWidth = displayHeight * aspectRatio * 0.7; // Narrower width (70% of proportional)
     const alpha = 0.7 + depthFactor * 0.3; // Good opacity
     
-    console.log(`Drawing tree at CENTER (${x.toFixed(0)}, ${y.toFixed(0)}) canvas: ${this.canvas.width}x${this.canvas.height}`);
+    console.log(`Tree: ${tree.type}, Original: ${treeImage.width}x${treeImage.height}, Aspect: ${aspectRatio.toFixed(2)}, Display: ${displayWidth.toFixed(0)}x${displayHeight.toFixed(0)}`);
 
     this.ctx.save();
     this.ctx.globalAlpha = alpha;
