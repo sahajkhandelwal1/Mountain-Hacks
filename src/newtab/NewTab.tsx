@@ -186,7 +186,7 @@ export function NewTab() {
       // Show notification that fire stopped
       chrome.notifications.create({
         type: 'basic',
-        iconUrl: chrome.runtime.getURL('icons/icon128.png'),
+        iconUrl: chrome.runtime.getURL('icons/tree-icon.png'),
         title: '🌲 Wildfire Extinguished',
         message: 'The wildfire has been stopped. Your forest is safe!',
         priority: 2
@@ -214,7 +214,7 @@ export function NewTab() {
       // Show notification that fire started
       chrome.notifications.create({
         type: 'basic',
-        iconUrl: chrome.runtime.getURL('icons/icon128.png'),
+        iconUrl: chrome.runtime.getURL('icons/tree-icon.png'),
         title: '🔥 Wildfire Alert!',
         message: 'A wildfire has started in your forest! Stay focused to stop the spread.',
         priority: 2
