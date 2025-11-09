@@ -7,6 +7,23 @@ import { Tree, Animal } from '../shared/types';
 import { getRandomTreeType, getRandomAnimalType, randomBetween } from '../shared/utils/helpers';
 
 export class SessionManager {
+  // Utility to reposition all trees to center
+  static async repositionTreesToCenter(): Promise<void> {
+    const forest = await ForestStorage.getForestState();
+    const groundY = 200;
+    const centerX = 960;
+    const spread = 500;
+    
+    for (let i = 0; i < forest.trees.length; i++) {
+      const tree = forest.trees[i];
+      await ForestStorage.updateTree(tree.id, {
+        x: centerX - spread/2 + randomBetween(0, spread),
+        y: groundY
+      });
+    }
+    console.log('Repositioned', forest.trees.length, 'trees to center');
+  }
+
   static async startSession(): Promise<string> {
     const sessionId = generateId();
     
@@ -64,11 +81,11 @@ export class SessionManager {
     
     // Create a few starter trees (small saplings)
     const treeCount = 5;
-    // Position trees in the visible canvas area - below search bar
+    // Position trees in the CENTER of the screen
     // Canvas is 40vh tall (~400px) and full width (~1920px)
-    const groundY = 300; // Near bottom of 400px canvas
-    const centerX = 960; // Center of 1920px screen
-    const spread = 400; // Spread them out more
+    const groundY = 200; // Higher up in canvas
+    const centerX = 960; // Center of typical 1920px screen
+    const spread = 500; // Spread them out more
     
     for (let i = 0; i < treeCount; i++) {
       const tree: Tree = {
@@ -94,9 +111,9 @@ export class SessionManager {
     await this.growExistingTrees();
     
     // Add new sapling every tick
-    const groundY = 300; // Near bottom of canvas
+    const groundY = 200; // Higher up in canvas
     const centerX = 960; // Center of screen
-    const spread = 400; // Spread them out
+    const spread = 500; // Spread them out
     
     const tree: Tree = {
       id: generateId(),
@@ -159,9 +176,9 @@ export class SessionManager {
   }
 
   static async addAnimal(focusScore: number): Promise<void> {
-    const groundY = 300;
+    const groundY = 200;
     const centerX = 960;
-    const spread = 400;
+    const spread = 500;
     const animal: Animal = {
       id: generateId(),
       type: getRandomAnimalType(),

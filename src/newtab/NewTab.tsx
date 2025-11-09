@@ -19,8 +19,8 @@ export function NewTab() {
 
   // Load image URLs
   useEffect(() => {
-    setBgImage1(chrome.runtime.getURL('images/misty-forest-main-bg.png'));
-    setBgImage2(chrome.runtime.getURL('images/misty-forest-bg.png'));
+    setBgImage1(chrome.runtime.getURL('images/misty-forest-bg.png'));
+    setBgImage2(chrome.runtime.getURL('images/misty-forest-main-bg.png'));
   }, []);
 
   // Initialize canvas renderer
@@ -162,6 +162,40 @@ export function NewTab() {
     chrome.runtime.sendMessage({ type: 'END_SESSION' });
   };
 
+  const handleTestWildfire = async () => {
+    if (isWildfireActive) {
+      // Stop the wildfire
+      await ForestStorage.updateForestState({
+        wildfire: {
+          active: false,
+          level: 0,
+          affectedTreeIds: [],
+          startTime: null,
+          spreadingRate: 0.1
+        }
+      });
+    } else {
+      // Start a test wildfire
+      const treeIds = forestState?.trees.slice(0, 3).map(t => t.id) || [];
+      await ForestStorage.updateForestState({
+        wildfire: {
+          active: true,
+          level: 0.7, // Start at 70% for demo
+          affectedTreeIds: treeIds,
+          startTime: Date.now(),
+          spreadingRate: 0.1
+        }
+      });
+      
+      // Mark some trees as burning
+      if (forestState) {
+        for (const treeId of treeIds) {
+          await ForestStorage.updateTree(treeId, { status: 'burning' });
+        }
+      }
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -179,6 +213,9 @@ export function NewTab() {
   const totalTrees = forestState?.trees.length || 0;
   const focusScore = Math.round(sessionState?.focusScore || 100);
 
+  const isWildfireActive = forestState?.wildfire.active || false;
+  const wildfireLevel = forestState?.wildfire.level || 0;
+
   return (
     <div className="min-h-screen text-white overflow-y-auto relative">
       {/* Main Hero Section */}
@@ -189,6 +226,7 @@ export function NewTab() {
           style={{
             backgroundImage: bgImage1 ? `url(${bgImage1})` : 'none',
             opacity: backgroundOpacity,
+            filter: 'blur(4px)',
           }}
         />
         <div
@@ -196,16 +234,73 @@ export function NewTab() {
           style={{
             backgroundImage: bgImage2 ? `url(${bgImage2})` : 'none',
             opacity: 1 - backgroundOpacity,
-            filter: `blur(${(1 - backgroundOpacity) * 3}px)`,
+            filter: `blur(${4 + (1 - backgroundOpacity) * 3}px)`,
           }}
         />
+        
+        {/* Wildfire overlay effects */}
+        {isWildfireActive && (
+          <>
+            {/* Red/orange tint overlay */}
+            <div 
+              className="absolute inset-0 bg-gradient-to-t from-orange-600/40 via-red-600/20 to-transparent transition-opacity duration-1000"
+              style={{ opacity: wildfireLevel * 0.8 }}
+            />
+            
+            {/* Pulsing red glow */}
+            <div 
+              className="absolute inset-0 animate-pulse"
+              style={{
+                background: 'radial-gradient(circle at 50% 80%, rgba(255, 69, 0, 0.3) 0%, transparent 60%)',
+                opacity: wildfireLevel * 0.6,
+                animationDuration: '2s'
+              }}
+            />
+            
+            {/* Smoke effect */}
+            <div 
+              className="absolute inset-0 bg-gradient-to-b from-gray-900/30 via-transparent to-transparent"
+              style={{ opacity: wildfireLevel * 0.5 }}
+            />
+          </>
+        )}
+        
         <div className="absolute inset-0 bg-black/20" />
 
         {/* Content */}
         <div className="relative z-10 flex flex-col items-center justify-center gap-8 px-8 max-w-5xl -translate-y-[12.5vh]">
+          {/* Wildfire Warning Banner */}
+          {isWildfireActive && (
+            <div className="absolute -top-32 left-1/2 -translate-x-1/2 animate-pulse">
+              <div className="bg-gradient-to-r from-orange-600/90 to-red-600/90 backdrop-blur-md border-2 border-orange-400 rounded-2xl px-8 py-4 shadow-2xl">
+                <div className="flex items-center gap-3">
+                  <span className="text-4xl animate-fire-flicker">🔥</span>
+                  <div>
+                    <div className="text-white font-bold text-xl">Wildfire Alert!</div>
+                    <div className="text-orange-100 text-sm">Your forest is burning - stay focused!</div>
+                  </div>
+                  <span className="text-4xl animate-fire-flicker">🔥</span>
+                </div>
+                <div className="mt-2 bg-white/20 rounded-full h-2 overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-yellow-400 to-red-500 transition-all duration-500"
+                    style={{ width: `${wildfireLevel * 100}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          
           <div className="text-center space-y-1">
             <div className="flex items-start justify-center gap-3">
-              <h1 className="font-serif text-[11rem] leading-none tracking-tight text-white drop-shadow-2xl">
+              <h1 
+                className="font-serif text-[11rem] leading-none tracking-tight text-white drop-shadow-2xl transition-all duration-500"
+                style={{
+                  textShadow: isWildfireActive 
+                    ? `0 0 30px rgba(255, 69, 0, ${wildfireLevel * 0.8}), 0 0 60px rgba(255, 140, 0, ${wildfireLevel * 0.5})`
+                    : '0 25px 50px rgba(0, 0, 0, 0.5)'
+                }}
+              >
                 verdant
               </h1>
               <span className="font-serif text-3xl text-white/90 mt-6">focus</span>
@@ -228,10 +323,35 @@ export function NewTab() {
 
         {/* Forest Canvas - positioned below search bar */}
         <div className="absolute bottom-0 left-0 right-0 z-[5]" style={{ pointerEvents: 'none', height: '40vh' }}>
+          {/* Darker background behind trees to make them pop */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/20 to-transparent" />
+          
           <canvas
             ref={canvasRef}
-            className="w-full h-full"
+            className="w-full h-full relative z-10"
           />
+          
+          {/* Fire particles when wildfire is active */}
+          {isWildfireActive && (
+            <div className="absolute inset-0 overflow-hidden">
+              {[...Array(Math.floor(wildfireLevel * 20))].map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-2 h-2 rounded-full animate-fire-rise"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    bottom: '0%',
+                    background: `radial-gradient(circle, ${
+                      Math.random() > 0.5 ? '#ff6b00' : '#ff4500'
+                    }, transparent)`,
+                    animationDelay: `${Math.random() * 2}s`,
+                    animationDuration: `${2 + Math.random() * 2}s`,
+                    opacity: 0.6 + Math.random() * 0.4
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Controls */}
@@ -273,6 +393,15 @@ export function NewTab() {
                   </button>
                 </>
               )}
+              
+              {/* Demo: Test Wildfire Button */}
+              <button
+                onClick={handleTestWildfire}
+                className="px-6 py-3 rounded-full font-medium transition-all border backdrop-blur-sm bg-orange-500/90 text-white border-orange-400 shadow-lg hover:bg-orange-600/90 flex items-center justify-center gap-2"
+              >
+                <span>🔥</span>
+                <span>{isWildfireActive ? 'Stop Fire' : 'Test Fire'}</span>
+              </button>
             </div>
           )}
         </div>

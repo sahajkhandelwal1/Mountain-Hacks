@@ -104,6 +104,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           }
           break;
 
+        case 'REPOSITION_TREES':
+          try {
+            await SessionManager.repositionTreesToCenter();
+            sendResponse({ success: true, message: 'Trees repositioned to center' });
+          } catch (error: any) {
+            sendResponse({ success: false, error: error.message });
+          }
+          break;
+
         case 'testAPI':
           try {
             const config = await chrome.storage.local.get('apiConfig');
