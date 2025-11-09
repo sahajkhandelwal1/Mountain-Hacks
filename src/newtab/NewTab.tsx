@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, ChevronDown, ChevronUp } from 'lucide-react';
 import { ForestStorage } from '../shared/storage/forestStorage';
 import { SessionStorage } from '../shared/storage/sessionStorage';
 import { ForestState, SessionState } from '../shared/types';
+import { ImageForestRenderer } from '../shared/forest/ImageForestRenderer';
 
 export function NewTab() {
   const [forestState, setForestState] = useState<ForestState | null>(null);
@@ -13,12 +14,44 @@ export function NewTab() {
   const [sessionStarted, setSessionStarted] = useState(false);
   const [bgImage1, setBgImage1] = useState('');
   const [bgImage2, setBgImage2] = useState('');
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rendererRef = useRef<ImageForestRenderer | null>(null);
 
   // Load image URLs
   useEffect(() => {
     setBgImage1(chrome.runtime.getURL('images/misty-forest-main-bg.png'));
     setBgImage2(chrome.runtime.getURL('images/misty-forest-bg.png'));
   }, []);
+
+  // Initialize canvas renderer
+  useEffect(() => {
+    if (canvasRef.current && !rendererRef.current) {
+      const canvas = canvasRef.current;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      rendererRef.current = new ImageForestRenderer(canvas);
+      
+      const handleResize = () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        if (rendererRef.current && forestState) {
+          rendererRef.current.setForestState(forestState);
+          rendererRef.current.draw();
+        }
+      };
+      
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
+
+  // Render forest when state changes
+  useEffect(() => {
+    if (forestState && rendererRef.current) {
+      rendererRef.current.setForestState(forestState);
+      rendererRef.current.draw();
+    }
+  }, [forestState]);
 
   // Load state from storage
   useEffect(() => {
@@ -168,11 +201,6 @@ export function NewTab() {
         />
         <div className="absolute inset-0 bg-black/20" />
 
-        {/* Forest Canvas - Trees will be added here later */}
-        <div className="absolute inset-0 z-[5]" style={{ pointerEvents: 'none' }}>
-          {/* Tree rendering disabled due to CSP restrictions */}
-        </div>
-
         {/* Content */}
         <div className="relative z-10 flex flex-col items-center justify-center gap-8 px-8 max-w-5xl -translate-y-[12.5vh]">
           <div className="text-center space-y-1">
@@ -186,16 +214,24 @@ export function NewTab() {
 
           <form onSubmit={handleSearch} className="w-[700px] mt-8">
             <div className="relative">
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search Google or type a URL"
-                className="w-full pl-14 pr-6 py-5 bg-white/95 text-gray-900 rounded-full text-base font-medium placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-xl"
+                className="w-full pl-14 pr-6 py-5 bg-white/10 backdrop-blur-md text-white rounded-full text-base font-medium placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-white/20 shadow-xl border border-white/20 transition-all"
               />
             </div>
           </form>
+        </div>
+
+        {/* Forest Canvas - positioned below search bar */}
+        <div className="absolute bottom-0 left-0 right-0 z-[5]" style={{ pointerEvents: 'none', height: '40vh' }}>
+          <canvas
+            ref={canvasRef}
+            className="w-full h-full"
+          />
         </div>
 
         {/* Controls */}

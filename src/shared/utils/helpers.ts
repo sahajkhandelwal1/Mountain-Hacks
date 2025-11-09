@@ -41,7 +41,7 @@ export function distance(x1: number, y1: number, x2: number, y2: number): number
 }
 
 export function getRandomTreeType(): string {
-  const types = ['oak', 'pine', 'birch', 'maple', 'cedar'];
+  const types = ['tree1', 'tree2', 'tree3', 'tree4', 'tree5', 'tree6'];
   return types[randomIntBetween(0, types.length)];
 }
 

@@ -74,44 +74,59 @@ export const Popup: React.FC = () => {
 
   const hasWildfire = forest.wildfire.active;
 
-  return (
-    <div className="popup-container">
-      <header>
-        <h1>🌲 Verdant Focus Forest</h1>
-        <p className="subtitle">Grow your forest through focus</p>
-      </header>
+  const bgImage = chrome.runtime.getURL('images/misty-forest-main-bg.png');
 
-      <div className="forest-container">
-        <ForestCanvas
-          width={400}
-          height={300}
-          forestState={forest}
-        />
+  return (
+    <div 
+      className="bg-cover bg-center relative overflow-hidden"
+      style={{ 
+        backgroundImage: `url(${bgImage})`, 
+        width: '380px', 
+        height: '600px'
+      }}
+    >
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/25" />
+      
+      {/* Scrollable Content Container */}
+      <div className="relative z-10 h-full overflow-y-auto overflow-x-hidden p-6 space-y-4">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <h1 className="font-serif text-4xl text-white drop-shadow-lg mb-1">verdant</h1>
+          <p className="text-white/80 text-sm">Grow your forest through focus</p>
+        </div>
+
+        {/* Wildfire Warning */}
         {hasWildfire && (
-          <div className="wildfire-warning">
-            🔥 Wildfire spreading!
+          <div className="bg-red-500/20 backdrop-blur-md border border-red-400/30 rounded-2xl p-3 text-center">
+            <span className="text-red-200 font-medium">🔥 Wildfire spreading!</span>
           </div>
         )}
+
+        {/* Session Controls */}
+        <SessionControls
+          session={session}
+          onStartSession={handleStartSession}
+          onEndSession={handleEndSession}
+        />
+
+        {/* Focus Insights */}
+        {session.active && <FocusInsights />}
+
+        {/* Stats Panel */}
+        <StatsPanel
+          session={session}
+          forest={forest}
+          focusMetrics={focusMetrics}
+          showCharts={false}
+        />
+
+        {/* API Settings */}
+        <APISettings />
+
+        {/* Debug Panel */}
+        <DebugPanel />
       </div>
-
-      <APISettings />
-
-      {session.active && <FocusInsights />}
-
-      <StatsPanel
-        session={session}
-        forest={forest}
-        focusMetrics={focusMetrics}
-        showCharts={false}
-      />
-
-      <SessionControls
-        session={session}
-        onStartSession={handleStartSession}
-        onEndSession={handleEndSession}
-      />
-
-      <DebugPanel />
     </div>
   );
 };

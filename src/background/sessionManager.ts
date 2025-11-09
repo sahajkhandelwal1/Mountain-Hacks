@@ -64,18 +64,22 @@ export class SessionManager {
     
     // Create a few starter trees (small saplings)
     const treeCount = 5;
-    const groundY = 500; // Match canvas groundY
+    // Position trees in the visible canvas area - below search bar
+    // Canvas is 40vh tall (~400px) and full width (~1920px)
+    const groundY = 300; // Near bottom of 400px canvas
+    const centerX = 960; // Center of 1920px screen
+    const spread = 400; // Spread them out more
     
     for (let i = 0; i < treeCount; i++) {
       const tree: Tree = {
         id: generateId(),
         type: getRandomTreeType(),
-        height: randomBetween(10, 20), // Start small
-        x: randomBetween(100, 700),
+        height: randomBetween(120, 150), // Start much bigger for demo
+        x: centerX - spread/2 + randomBetween(0, spread),
         y: groundY,
         status: 'healthy',
         age: 0,
-        growthStage: 0 // 0 = sapling, 1 = young, 2 = mature, 3 = full grown
+        growthStage: 2 // Start at mature stage
       };
       console.log('Creating tree:', tree);
       await ForestStorage.addTree(tree);
@@ -90,17 +94,19 @@ export class SessionManager {
     await this.growExistingTrees();
     
     // Add new sapling every tick
-    const groundY = 500;
+    const groundY = 300; // Near bottom of canvas
+    const centerX = 960; // Center of screen
+    const spread = 400; // Spread them out
     
     const tree: Tree = {
       id: generateId(),
       type: getRandomTreeType(),
-      height: randomBetween(10, 20), // Start as small sapling
-      x: randomBetween(100, 700),
+      height: randomBetween(120, 150), // Start much bigger for demo
+      x: centerX - spread/2 + randomBetween(0, spread),
       y: groundY,
       status: 'healthy',
       age: 0,
-      growthStage: 0
+      growthStage: 2 // Start at mature stage
     };
     
     console.log('Adding new sapling:', tree);
@@ -125,8 +131,8 @@ export class SessionManager {
         tree.age = (tree.age || 0) + 1;
         
         // Grow tree based on age
-        const maxHeight = 100;
-        const growthRate = 2; // pixels per tick
+        const maxHeight = 200; // Increased max size
+        const growthRate = 5; // Faster growth for demo
         
         if (tree.height < maxHeight) {
           tree.height = Math.min(maxHeight, tree.height + growthRate);
@@ -153,11 +159,13 @@ export class SessionManager {
   }
 
   static async addAnimal(focusScore: number): Promise<void> {
-    const groundY = 500;
+    const groundY = 300;
+    const centerX = 960;
+    const spread = 400;
     const animal: Animal = {
       id: generateId(),
       type: getRandomAnimalType(),
-      x: randomBetween(150, 650),
+      x: centerX - spread/2 + randomBetween(0, spread),
       y: groundY - 10,
       status: 'visible'
     };
